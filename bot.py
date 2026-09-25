@@ -18,6 +18,7 @@ if not TOKEN:
 # -------------------------
 
 class HealthHandler(BaseHTTPRequestHandler):
+
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
@@ -30,7 +31,12 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 def start_http_server():
     port = int(os.getenv("PORT", "10000"))
-    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+
+    server = HTTPServer(
+        ("0.0.0.0", port),
+        HealthHandler
+    )
+
     print(f"HTTP server listening on port {port}")
     server.serve_forever()
 
@@ -57,12 +63,16 @@ class VerifyBot(commands.Bot):
         )
 
     async def setup_hook(self):
+
         guild = discord.Object(id=GUILD_ID)
 
         self.tree.copy_global_to(guild=guild)
+
         await self.tree.sync(guild=guild)
 
-        print(f"Slash commands synced to server: {GUILD_ID}")
+        print(
+            f"Slash commands synced to server: {GUILD_ID}"
+        )
 
 
 bot = VerifyBot()
@@ -70,6 +80,7 @@ bot = VerifyBot()
 
 @bot.event
 async def on_ready():
+
     print(f"Logged in as {bot.user}")
     print(f"Bot ID: {bot.user.id}")
 
@@ -83,23 +94,38 @@ async def on_ready():
     description="Verify an OTP code."
 )
 @app_commands.describe(
-    otp="Enter the OTP code"
+    otp="Enter your OTP code"
 )
 async def verify(
     interaction: discord.Interaction,
     otp: str
 ):
 
-    correct_otp = "5EEA22B601764B7DFC6B8B0D9F0E7A64A0417D03C29E0"
+    # Your 6-digit OTP
+    six_digit_otp = "984254"
 
-    if otp == correct_otp:
+    # Your additional code
+    additional_code = "5EEA22B601764B7DFC6B8B0D9F0E7A64A0417D03C29E0"
+
+    # Check both codes
+    if otp == six_digit_otp:
+
         await interaction.response.send_message(
             "✅ OTP verified successfully!",
             ephemeral=True
         )
-    else:
+
+    elif otp == additional_code:
+
         await interaction.response.send_message(
-            "❌ Incorrect or expired OTP.",
+            "✅ OTP verified successfully!",
+            ephemeral=True
+        )
+
+    else:
+
+        await interaction.response.send_message(
+            "❌ Incorrect or expired OTP Please try again .",
             ephemeral=True
         )
 
