@@ -6,38 +6,58 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+# =========================
+# SETTINGS
+# =========================
+
 TOKEN = os.getenv("DISCORD_TOKEN")
+
+# Your Discord server ID
 GUILD_ID = 1538740748709658694
 
 if not TOKEN:
-    raise RuntimeError("DISCORD_TOKEN environment variable is not set.")
+    raise RuntimeError(
+        "DISCORD_TOKEN environment variable is not set."
+    )
 
 
-# -------------------------
-# Render HTTP server
-# -------------------------
+# =========================
+# RENDER HTTP SERVER
+# =========================
 
 class HealthHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
+        self.send_header(
+            "Content-Type",
+            "text/plain"
+        )
         self.end_headers()
-        self.wfile.write(b"Discord bot is online.")
+
+        self.wfile.write(
+            b"Discord bot is online."
+        )
 
     def log_message(self, format, *args):
         return
 
 
 def start_http_server():
-    port = int(os.getenv("PORT", "10000"))
+
+    port = int(
+        os.getenv("PORT", "10000")
+    )
 
     server = HTTPServer(
         ("0.0.0.0", port),
         HealthHandler
     )
 
-    print(f"HTTP server listening on port {port}")
+    print(
+        f"HTTP server listening on port {port}"
+    )
+
     server.serve_forever()
 
 
@@ -47,9 +67,9 @@ threading.Thread(
 ).start()
 
 
-# -------------------------
-# Discord bot
-# -------------------------
+# =========================
+# DISCORD BOT
+# =========================
 
 intents = discord.Intents.default()
 
@@ -57,6 +77,7 @@ intents = discord.Intents.default()
 class VerifyBot(commands.Bot):
 
     def __init__(self):
+
         super().__init__(
             command_prefix="!",
             intents=intents
@@ -64,11 +85,19 @@ class VerifyBot(commands.Bot):
 
     async def setup_hook(self):
 
-        guild = discord.Object(id=GUILD_ID)
+        guild = discord.Object(
+            id=GUILD_ID
+        )
 
-        self.tree.copy_global_to(guild=guild)
+        # Copy commands to this server
+        self.tree.copy_global_to(
+            guild=guild
+        )
 
-        await self.tree.sync(guild=guild)
+        # Sync commands
+        await self.tree.sync(
+            guild=guild
+        )
 
         print(
             f"Slash commands synced to server: {GUILD_ID}"
@@ -78,16 +107,25 @@ class VerifyBot(commands.Bot):
 bot = VerifyBot()
 
 
+# =========================
+# BOT READY
+# =========================
+
 @bot.event
 async def on_ready():
 
-    print(f"Logged in as {bot.user}")
-    print(f"Bot ID: {bot.user.id}")
+    print(
+        f"Logged in as {bot.user}"
+    )
+
+    print(
+        f"Bot ID: {bot.user.id}"
+    )
 
 
-# -------------------------
-# /verify otp
-# -------------------------
+# =========================
+# /VERIFY OTP
+# =========================
 
 @bot.tree.command(
     name="verify",
@@ -101,21 +139,24 @@ async def verify(
     otp: str
 ):
 
-    # Your 6-digit OTP
-    six_digit_otp = "984254"
+    # =========================
+    # ACCEPTED CODES
+    # =========================
 
-    # Your additional code
-    additional_code = "5EEA22B601764B7DFC6B8B0D9F0E7A64A0417D03C29E0"
+    accepted_codes = {
+        "984254",
 
-    # Check both codes
-    if otp == six_digit_otp:
+        "5EEA22B601764B7DFC6B8B0D9F0E7A64A0417D03C29E0",
 
-        await interaction.response.send_message(
-            "✅ OTP verified successfully!",
-            ephemeral=True
-        )
+        "24775AFDE7761BC5A195DF4358577880574C55E7E3C524D2"
+    }
 
-    elif otp == additional_code:
+
+    # =========================
+    # VERIFY CODE
+    # =========================
+
+    if otp in accepted_codes:
 
         await interaction.response.send_message(
             "✅ OTP verified successfully!",
@@ -125,13 +166,13 @@ async def verify(
     else:
 
         await interaction.response.send_message(
-            "❌ Incorrect or expired OTP Please try again .",
+            "❌ Incorrect or expired OTP.",
             ephemeral=True
         )
 
 
-# -------------------------
-# Start bot
-# -------------------------
+# =========================
+# START BOT
+# =========================
 
 bot.run(TOKEN)
